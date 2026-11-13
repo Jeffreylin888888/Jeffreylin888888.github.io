@@ -40,7 +40,8 @@ p{margin:.4rem 0;max-width:46rem}
 .btn[aria-pressed="true"]{border-color:var(--new);color:var(--new);font-weight:600}
 .btn:focus-visible,input:focus-visible{outline:2px solid var(--new);outline-offset:2px}
 .say.on{background:var(--rulebg)}
-ul.how{margin:.5rem 0 0;padding-left:1.1rem;max-width:46rem;font-size:.92rem}ul.how li{margin:.3rem 0}
+ul.how,ol.how{margin:.5rem 0 0;padding-left:1.3rem;max-width:46rem;font-size:.92rem}ul.how li,ol.how li{margin:.3rem 0}
+.how ul{padding-left:1.2rem;margin:.2rem 0}.how ul li{margin:.15rem 0}
 .vals{display:flex;flex-wrap:wrap;gap:.35rem;margin:.5rem 0}.vals span{font-size:.82rem;background:var(--bg);border-radius:6px;padding:.2rem .5rem}
 .say{font-size:1.05rem;font-weight:500;padding:.5rem .7rem;border-radius:6px;background:var(--bg);margin-top:.5rem}
 .legend{display:flex;flex-wrap:wrap;gap:1rem;font-size:.85rem;color:var(--muted);margin-top:.5rem}
@@ -95,6 +96,39 @@ ul.how{margin:.5rem 0 0;padding-left:1.1rem;max-width:46rem;font-size:.92rem}ul.
 
   <h2>3 · The intervention layer keeps the opponent's driving legal</h2>
   <p>Some Scenic knob settings make the opponent break the racing rules, for example moving over onto ART when ART is already alongside. The intervention layer is a Python script that sits between the Scenic knobs and the simulator and handles each IAC passing rule. Every 5 milliseconds it checks both cars against every rule. When a rule would be broken, it changes the opponent's motion just enough to stay legal. Otherwise it leaves the opponent exactly as the Scenic knobs made it.</p>
+  <div class="card">
+    <p class="muted" style="font-size:.85rem;margin-top:0">One tick is one 5-millisecond step. The plan is the opponent's motion as the Scenic knobs made it.</p>
+    <div class="gh">What it reads at tick t</div>
+    <ul class="how">
+      <li><strong>Opponent:</strong>
+        <ul>
+          <li><strong>t−1:</strong> its previous position, which the layer sent.</li>
+          <li><strong>t:</strong> its current position, which the layer sent.</li>
+          <li><strong>The plan:</strong> its planned position for the next step.</li>
+        </ul></li>
+      <li><strong>ART:</strong>
+        <ul>
+          <li><strong>t:</strong> its position, speed and heading.</li>
+          <li><strong>Two records:</strong> the tick at which ART became established alongside, and whether ART has already passed the opponent.</li>
+        </ul></li>
+      <li><strong>Others:</strong>
+        <ul>
+          <li><strong>t:</strong> the flags.</li>
+          <li><strong>Fixed before the run:</strong> the track edges and white lines, how hard the real opponent braked at each point, the engine limit, and the sideways limits.</li>
+        </ul></li>
+    </ul>
+    <div class="gh" style="margin-top:.9rem">What it does at tick t</div>
+    <ol class="how">
+      <li><strong>Check whether the opponent's next move would break a rule.</strong> If the opponent is on its plan, the next move is the planned t+1. If it was changed earlier, the next move is a small step back toward the plan (see step 3).</li>
+      <li><strong>If it would break a rule,</strong> change the opponent's sideways speed or its speed along the line, whichever that rule is about, by as little as possible so that it no longer breaks the rule.</li>
+      <li><strong>If it would not break a rule:</strong>
+        <ul>
+          <li><strong>On its plan:</strong> it follows the plan.</li>
+          <li><strong>Changed earlier:</strong> it merges back gradually. Each tick it moves a small step toward the planned line, at the plan's speed for where it is, without speeding up to catch up. Once it is back on the line, it follows the plan exactly, slightly later than scheduled if it was slowed.</li>
+        </ul></li>
+      <li><strong>Send the position.</strong> dSPACE draws the opponent there, and the next tick starts from this position.</li>
+    </ol>
+  </div>
   <div class="card">
     <div class="bar" style="justify-content:space-between">
       <strong style="font-size:.95rem">A real example: Scenic knobs picked by one of our search methods</strong>
